@@ -21,11 +21,15 @@ jobs:
         run: |
           test -s Overlay/Assets/SpatialHDMI/StreamingAssets/demo.mp4
           ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 Overlay/Assets/SpatialHDMI/StreamingAssets/demo.mp4
-      - name: Assemble official Unity XR base
-        run: bash tools/prepare-project.sh
-      - name: Verify build method and project files
+      - name: Assemble official Unity XR base using UBA hook context
+        run: |
+          mkdir -p Base
+          cd Base
+          bash ../tools/prepare-project-uba.sh
+      - name: Verify build method and generated Unity project
         run: |
           test -s Base/ProjectSettings/ProjectVersion.txt
+          test -s Base/Packages/manifest.json
           test -s Base/Assets/Editor/SpatialBuild.cs
           test -s Base/Assets/SpatialHDMI/StreamingAssets/demo.mp4
           grep -q 'SpatialBuild.Build' .github/workflows/android.yml
