@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Unity Build Automation invokes the pre-build hook from the configured
-# project subdirectory ("Base"), which already exists as its workspace.
-project_dir="$(pwd -P)"
+# Unity Build Automation resolves the hook path relative to the configured
+# project subfolder, but its process working directory may vary. Always derive
+# the repository and project paths from this script's actual location.
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 repo_root="$(cd "$script_dir/.." && pwd -P)"
-expected_project_dir="$(cd "$repo_root/Base" && pwd -P)"
+project_dir="$repo_root/Base"
 
-if [ "$project_dir" != "$expected_project_dir" ]; then
-  echo "Expected Unity Build Automation to run this hook from $expected_project_dir; got $project_dir" >&2
-  exit 1
-fi
+printf 'UBA hook working directory: %s\n' "$(pwd -P)"
+printf 'UBA repository root: %s\n' "$repo_root"
+printf 'UBA Unity project directory: %s\n' "$project_dir"
 
 for tool in git git-lfs python3; do
   command -v "$tool" >/dev/null || { echo "Missing tool: $tool" >&2; exit 1; }
@@ -47,10 +46,11 @@ done
 
 printf '\nUpstream revision: %s\nUnity editor:\n' "$revision"
 cat "$project_dir/ProjectSettings/ProjectVersion.txt"
-python3 - <<'PY'
+python3 - "$project_dir/Packages/manifest.json" <<'PY'
 import json
+import sys
 from pathlib import Path
-deps=json.loads(Path("Base/Packages/manifest.json").read_text(encoding="utf-8")).get("dependencies", {})
+deps=json.loads(Path(sys.argv[1]).read_text(encoding="utf-8")).get("dependencies", {})
 required=["com.unity.xr.meta-openxr","com.unity.xr.openxr","com.unity.xr.arfoundation","com.unity.xr.interaction.toolkit"]
 for key in required:
     if key not in deps:
