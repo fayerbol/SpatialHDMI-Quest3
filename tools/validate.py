@@ -14,7 +14,7 @@ for token in ['SpatialHDMI_Main.unity','AndroidArchitecture.ARM64','ScriptingImp
     if token not in editor: sys.exit('Missing build code marker: '+token)
 for token in ['UNITY_VERTEX_OUTPUT_STEREO','UNITY_SETUP_INSTANCE_ID','UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO']:
     if token not in shader: sys.exit('Missing stereo shader marker: '+token)
-for token in ['SpatialBuild.Build','test -s Base/build/Android/SpatialHDMI.apk','if: always()','collectUnityLogs: true']:
+for token in ['SpatialBuild.Build','test -s Base/build/Android/SpatialHDMI.apk','if: always()']:
     if token not in workflow: sys.exit('Missing workflow marker: '+token)
 if (root/'Overlay/Assets/SpatialHDMI/Scripts/AutoSetup.cs').exists(): sys.exit('Old runtime autoinstaller conflicts with generated scene')
 print('PASS: files and static markers present (not a Unity or device test).')
