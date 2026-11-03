@@ -29,7 +29,6 @@ jobs:
           unityVersion: auto
           buildMethod: SpatialBuild.Build
           allowDirtyBuild: true
-          collectUnityLogs: true
       - name: Require nonempty APK
         run: test -s Base/build/Android/SpatialHDMI.apk
       - name: Upload APK
