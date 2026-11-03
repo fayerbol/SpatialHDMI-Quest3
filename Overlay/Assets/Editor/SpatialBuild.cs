@@ -17,6 +17,17 @@ public static class SpatialBuild {
     const string MaterialPath="Assets/SpatialHDMI/Resources/SpatialVideo.mat";
     [MenuItem("Spatial HDMI/Generate scene and build Android")]
     public static void Build() {
+        PrepareScene();
+        Directory.CreateDirectory("build/Android");
+        string output=Path.GetFullPath("build/Android/SpatialHDMI.apk");
+        if(File.Exists(output)) File.Delete(output);
+        var opts=new BuildPlayerOptions { scenes=new[]{ScenePath}, locationPathName=output, target=BuildTarget.Android, options=BuildOptions.None };
+        BuildReport result=BuildPipeline.BuildPlayer(opts);
+        if(result.summary.result != BuildResult.Succeeded || !File.Exists(output) || new FileInfo(output).Length == 0)
+            throw new Exception("APK generation failed: "+result.summary.result);
+        Debug.Log("Created APK: "+output);
+    }
+    public static void PrepareScene() {
         if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android) throw new Exception("Start Unity with -buildTarget Android");
         foreach(var file in new[]{"Assets/SpatialHDMI/StreamingAssets/demo.mp4","Assets/SpatialHDMI/Resources/Screen.shader","Packages/manifest.json"})
             if (!File.Exists(file)) throw new FileNotFoundException("Missing required file: "+file);
@@ -37,14 +48,6 @@ public static class SpatialBuild {
         EditorUserBuildSettings.buildAppBundle=false;
         MakeScene();
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
-        Directory.CreateDirectory("build/Android");
-        string output=Path.GetFullPath("build/Android/SpatialHDMI.apk");
-        if(File.Exists(output)) File.Delete(output);
-        var opts=new BuildPlayerOptions { scenes=new[]{ScenePath}, locationPathName=output, target=BuildTarget.Android, options=BuildOptions.None };
-        BuildReport result=BuildPipeline.BuildPlayer(opts);
-        if(result.summary.result != BuildResult.Succeeded || !File.Exists(output) || new FileInfo(output).Length == 0)
-            throw new Exception("APK generation failed: "+result.summary.result);
-        Debug.Log("Created APK: "+output);
     }
     static void MakeScene() {
         var shader=AssetDatabase.LoadAssetAtPath<Shader>("Assets/SpatialHDMI/Resources/Screen.shader");
