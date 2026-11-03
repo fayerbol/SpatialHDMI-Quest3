@@ -1,0 +1,29 @@
+name: Spatial HDMI preflight (no Unity license)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Validate Spatial HDMI source package
+        run: python3 tools/validate.py
+      - name: Validate demo video
+        run: |
+          test -s Overlay/Assets/SpatialHDMI/StreamingAssets/demo.mp4
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 Overlay/Assets/SpatialHDMI/StreamingAssets/demo.mp4
+      - name: Assemble official Unity XR base
+        run: bash tools/prepare-project.sh
+      - name: Verify build method and project files
+        run: |
+          test -s Base/ProjectSettings/ProjectVersion.txt
+          test -s Base/Assets/Editor/SpatialBuild.cs
+          test -s Base/Assets/SpatialHDMI/StreamingAssets/demo.mp4
+          grep -q 'SpatialBuild.Build' .github/workflows/android.yml
