@@ -1,0 +1,51 @@
+name: Spatial HDMI Android
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Validate package before downloading
+        run: python3 tools/validate.py
+      - name: Assemble upstream project
+        run: bash tools/prepare-project.sh 2>&1 | tee prepare.log
+      - name: Build Android APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: Base
+          targetPlatform: Android
+          unityVersion: auto
+          buildMethod: SpatialBuild.Build
+          allowDirtyBuild: true
+          collectUnityLogs: true
+      - name: Require nonempty APK
+        run: test -s Base/build/Android/SpatialHDMI.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpatialHDMI-APK
+          path: Base/build/Android/SpatialHDMI.apk
+          if-no-files-found: error
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpatialHDMI-diagnostics
+          path: |
+            prepare.log
+            Logs/UnityDiagnostics/
+            Base/Logs/
+            Base/Builds/Logs/
+          if-no-files-found: warn
