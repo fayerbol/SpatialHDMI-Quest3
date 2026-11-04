@@ -26,7 +26,7 @@ git clone --branch v1.0.0-pre.1 --depth 1 https://github.com/Unity-Technologies/
 git -C "$tmp/upstream" lfs pull
 revision="$(git -C "$tmp/upstream" rev-parse HEAD)"
 case "$revision" in
-  1130bc5*) ;;
+  1130bc5ff206eeef7c0e7d6c5617afb2b36dab4b) ;;
   *) echo "Unexpected upstream revision: $revision" >&2; exit 1 ;;
 esac
 
@@ -38,9 +38,11 @@ mkdir -p "$project_dir/Assets" "$project_dir/Packages" "$project_dir/ProjectSett
 cp -R "$tmp/upstream/Assets/." "$project_dir/Assets/"
 cp -R "$tmp/upstream/Packages/." "$project_dir/Packages/"
 cp -R "$tmp/upstream/ProjectSettings/." "$project_dir/ProjectSettings/"
+rm -rf "$project_dir/Assets/SpatialHDMI"
 cp -R "$repo_root/Overlay/Assets/." "$project_dir/Assets/"
+python3 "$repo_root/tools/check_project.py" "$project_dir"
 
-for path in ProjectSettings/ProjectVersion.txt Packages/manifest.json Assets/SpatialHDMI/StreamingAssets/demo.mp4; do
+for path in ProjectSettings/ProjectVersion.txt Packages/manifest.json Assets/StreamingAssets/demo.mp4; do
   test -s "$project_dir/$path" || { echo "Missing or empty after assembly: $path" >&2; exit 1; }
 done
 

@@ -1,0 +1,11 @@
+Base/
+Library/
+Temp/
+Logs/
+obj/
+build/
+*.csproj
+*.sln
+.uba-upstream.*/
+__pycache__/
+test-results/
