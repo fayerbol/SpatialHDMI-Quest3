@@ -40,6 +40,7 @@ cp -R "$tmp/upstream/Packages/." "$project_dir/Packages/"
 cp -R "$tmp/upstream/ProjectSettings/." "$project_dir/ProjectSettings/"
 rm -rf "$project_dir/Assets/SpatialHDMI"
 cp -R "$repo_root/Overlay/Assets/." "$project_dir/Assets/"
+python3 "$repo_root/tools/configure_editor.py" "$project_dir"
 python3 "$repo_root/tools/check_project.py" "$project_dir"
 
 for path in ProjectSettings/ProjectVersion.txt Packages/manifest.json Assets/StreamingAssets/demo.mp4; do

@@ -9,6 +9,7 @@ git -C Base lfs pull
 revision="$(git -C Base rev-parse HEAD)"
 case "$revision" in 1130bc5ff206eeef7c0e7d6c5617afb2b36dab4b) ;; *) echo "Unexpected upstream revision: $revision" >&2; exit 1;; esac
 cp -R Overlay/Assets/. Base/Assets/
+python3 tools/configure_editor.py Base
 python3 tools/check_project.py Base
 for path in Base/ProjectSettings/ProjectVersion.txt Base/Packages/manifest.json Base/Assets/StreamingAssets/demo.mp4; do
   test -s "$path" || { echo "Missing or empty: $path" >&2; exit 1; }

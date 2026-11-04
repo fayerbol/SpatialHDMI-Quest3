@@ -29,7 +29,22 @@ public static class SpatialBuild {
     public const string ScenePath="Assets/SpatialHDMI/Scenes/SpatialHDMI_Main.unity";
     const string RigPath="Assets/Samples/XR Interaction Toolkit/2.5.1/Hands Interaction Demo/Prefabs/XR Interaction Hands Setup.prefab";
     const string MaterialPath="Assets/SpatialHDMI/Resources/SpatialVideo.mat";
+    const string CompatibilityPath="Assets/Editor/SpatialBuildCompatibility.json";
+    [Serializable] sealed class EditorCompatibility {
+        public string sourceEditor="",preferredEditor="",preferredRevision="";
+        public string[] supportedEditors=Array.Empty<string>();
+    }
     static void Require(bool condition,string message) { if(!condition)throw new Exception("Spatial prebuild validation: "+message); }
+    static void ValidateEditorVersion() {
+        Require(File.Exists(CompatibilityPath),"Missing editor compatibility policy: "+CompatibilityPath);
+        var policy=JsonUtility.FromJson<EditorCompatibility>(File.ReadAllText(CompatibilityPath));
+        Require(policy!=null && policy.supportedEditors!=null && policy.supportedEditors.Length>0 &&
+            policy.supportedEditors.All(v=>v!=null && v.StartsWith("2022.3.",StringComparison.Ordinal)) &&
+            policy.supportedEditors.Contains(policy.preferredEditor),"Invalid Unity 2022.3 LTS compatibility policy");
+        Require(policy.supportedEditors.Contains(Application.unityVersion),
+            "Unsupported Unity editor "+Application.unityVersion+"; supported: "+string.Join(", ",policy.supportedEditors));
+        Debug.Log("Spatial editor compatibility: using "+Application.unityVersion+"; cloud target "+policy.preferredEditor+"; upstream source "+policy.sourceEditor);
+    }
     [MenuItem("Spatial HDMI/Validate scene and configuration")]
     public static void Validate() { PrepareScene();Debug.Log("SPATIAL_VALIDATION_PASS: C# loaded, scene, XR, shaders and UI actions checked. Device behavior untested."); }
     [MenuItem("Spatial HDMI/Build Android")]
@@ -43,7 +58,7 @@ public static class SpatialBuild {
     // Keep this public entry point for the existing UBA pre-export method.
     public static void PrepareScene() {
         Require(EditorUserBuildSettings.activeBuildTarget==BuildTarget.Android,"Start Unity with -buildTarget Android");
-        Require(Application.unityVersion=="2022.3.8f1","Expected pinned Unity 2022.3.8f1; found "+Application.unityVersion);
+        ValidateEditorVersion();
         foreach(var file in new[]{"Assets/StreamingAssets/demo.mp4","Assets/SpatialHDMI/Resources/Screen.shader","Assets/SpatialHDMI/Resources/SpatialTint.shader",RigPath,"Packages/manifest.json"})
             Require(File.Exists(file),"Missing required file: "+file);
         Require(new FileInfo("Assets/StreamingAssets/demo.mp4").Length>1000000,"Demo is missing or a Git LFS pointer");

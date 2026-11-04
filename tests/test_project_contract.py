@@ -13,7 +13,7 @@ checker=importlib.util.module_from_spec(spec);spec.loader.exec_module(checker)
 class AssembledProjectGuards(unittest.TestCase):
  def setUp(self):
   self.temp=tempfile.TemporaryDirectory();self.project=Path(self.temp.name)
-  for p in ['ProjectSettings/ProjectVersion.txt','ProjectSettings/GraphicsSettings.asset','Packages/manifest.json',checker.RIG,'Assets/StreamingAssets/demo.mp4','Assets/Editor/SpatialBuild.cs','Assets/XR/Settings/Open XR Package Settings.asset']:
+  for p in ['ProjectSettings/ProjectVersion.txt','ProjectSettings/GraphicsSettings.asset','Packages/manifest.json',checker.RIG,'Assets/StreamingAssets/demo.mp4','Assets/Editor/SpatialBuild.cs','Assets/Editor/SpatialBuildCompatibility.json','Assets/XR/Settings/Open XR Package Settings.asset']:
    dest=self.project/p;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(PROJECT/p,dest)
  def tearDown(self):self.temp.cleanup()
  def test_real_pinned_project_passes(self):self.assertEqual(checker.check(self.project),[])
@@ -31,5 +31,11 @@ class AssembledProjectGuards(unittest.TestCase):
   p=self.project/'ProjectSettings/GraphicsSettings.asset';s=p.read_text();import re
   p.write_text(re.sub(r'm_CustomRenderPipeline: .+', 'm_CustomRenderPipeline: {fileID: 0}',s))
   self.assertIn('URP not assigned',checker.check(self.project))
+ def test_upstream_metadata_must_be_aligned_before_editor_launch(self):
+  p=self.project/'ProjectSettings/ProjectVersion.txt';p.write_text('m_EditorVersion: 2022.3.8f1\n')
+  self.assertIn('Wrong Unity editor version',checker.check(self.project))
+ def test_wrong_editor_changeset_is_rejected(self):
+  p=self.project/'ProjectSettings/ProjectVersion.txt';p.write_text(p.read_text().replace('96770f904ca7','b5eafc012955'))
+  self.assertIn('Wrong Unity editor changeset',checker.check(self.project))
 
 if __name__=='__main__':unittest.main()

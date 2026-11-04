@@ -18,10 +18,14 @@ RIG = 'Assets/Samples/XR Interaction Toolkit/2.5.1/Hands Interaction Demo/Prefab
 
 def check(project):
     project=Path(project);errors=[]
-    for path in ['ProjectSettings/ProjectVersion.txt','Packages/manifest.json',RIG,'Assets/StreamingAssets/demo.mp4','Assets/Editor/SpatialBuild.cs','Assets/XR/Settings/Open XR Package Settings.asset']:
+    for path in ['ProjectSettings/ProjectVersion.txt','ProjectSettings/GraphicsSettings.asset','Packages/manifest.json',RIG,'Assets/StreamingAssets/demo.mp4','Assets/Editor/SpatialBuild.cs','Assets/Editor/SpatialBuildCompatibility.json','Assets/XR/Settings/Open XR Package Settings.asset']:
         if not (project/path).is_file():errors.append('Missing assembled project path: '+path)
     if errors:return errors
-    if 'm_EditorVersion: 2022.3.8f1\n' not in (project/'ProjectSettings/ProjectVersion.txt').read_text():errors.append('Wrong Unity editor version')
+    policy=json.loads((project/'Assets/Editor/SpatialBuildCompatibility.json').read_text())
+    version=policy['preferredEditor'];revision=policy['preferredRevision']
+    metadata=(project/'ProjectSettings/ProjectVersion.txt').read_text()
+    if f'm_EditorVersion: {version}\n' not in metadata:errors.append('Wrong Unity editor version')
+    if f'm_EditorVersionWithRevision: {version} ({revision})\n' not in metadata:errors.append('Wrong Unity editor changeset')
     deps=json.loads((project/'Packages/manifest.json').read_text())['dependencies']
     for name,version in VERSIONS.items():
         if deps.get(name)!=version:errors.append('Incompatible pinned dependency: '+name)

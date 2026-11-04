@@ -19,6 +19,7 @@ Spatial video player for mixed reality, with a bundled MP4, a movable 16:9 flat/
 
 | Document | Contents |
 |---|---|
+| [Build #8 compatibility](docs/BUILD8_COMPATIBILITY.md) | Editor policy fix, resolved package audit and remaining export validation |
 | [Diagnosis](docs/DIAGNOSTICO.md) | Findings from the previous source, certainty and remaining pink-screen diagnosis |
 | [Research](docs/INVESTIGACION.md) | Accessible references, inspected SDK versions and limits of video inspection |
 | [Architecture](docs/ARQUITECTURA.md) | Responsibilities, interaction and rendering choices |
@@ -29,7 +30,9 @@ Spatial video player for mixed reality, with a bundled MP4, a movable 16:9 flat/
 
 [Unity-Technologies/mr-example-meta-openxr](https://github.com/Unity-Technologies/mr-example-meta-openxr) tag `v1.0.0-pre.1`, commit `1130bc5ff206eeef7c0e7d6c5617afb2b36dab4b`.
 
-Unity **2022.3.8f1**, URP **14.0.8**, OpenXR **1.8.2**, Unity OpenXR Meta **0.2.1**, XR Hands **1.3.0**, XRI **2.5.1**, AR Foundation **5.1.0-pre.10**, Input System **1.7.0**. The Meta XR Core/Interaction SDK packages are **not installed**; the existing compatible Unity integration is used instead of importing a current SDK that targets a different editor.
+The upstream was authored with Unity **2022.3.8f1**. Generated project metadata now targets the existing cloud editor **2022.3.62f3** (`96770f904ca7`). Both exact releases are explicitly accepted by the shared editor policy; other versions are rejected. No Unity Cloud setting is changed.
+
+Source manifest pins: URP **14.0.8**, OpenXR **1.8.2**, Unity OpenXR Meta **0.2.1**, XR Hands **1.3.0**, XRI **2.5.1**, AR Foundation **5.1.0-pre.10**, Input System **1.7.0**. Build #8 resolved newer compatible packages inside Unity; the source pins are not a claim about the resolved cloud versions. See [build #8 compatibility audit](docs/BUILD8_COMPATIBILITY.md). The Meta XR Core/Interaction SDK packages are **not installed**; the existing compatible Unity integration is used instead of importing a current SDK that targets a different editor.
 
 ## Reproduce available checks
 

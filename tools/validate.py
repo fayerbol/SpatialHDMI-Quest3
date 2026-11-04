@@ -12,10 +12,11 @@ REQUIRED=[
  'Overlay/Assets/SpatialHDMI/Resources/Screen.shader',
  'Overlay/Assets/SpatialHDMI/Resources/SpatialTint.shader',
  'Overlay/Assets/Editor/SpatialBuild.cs',
+ 'Overlay/Assets/Editor/SpatialBuildCompatibility.json',
  *['Overlay/Assets/SpatialHDMI/Scripts/'+name+'.cs' for name in ['DemoVideo','SpatialScreen','ScreenController','SpatialUI','HandInteractionGuard','EnvironmentEffects','VideoSources','SettingsStore','SliderGesture','RuntimeDiagnostics']],
  'Overlay/Assets/Plugins/Android/SpatialMedia.androidlib/AndroidManifest.xml',
  'Overlay/Assets/Plugins/Android/SpatialMedia.androidlib/src/com/spatialhdmi/bridge/MediaPickerActivity.java',
- 'tools/check_project.py','tools/prepare-project.sh','tools/prepare-project-uba.sh',
+ 'tools/check_project.py','tools/configure_editor.py','tools/prepare-project.sh','tools/prepare-project-uba.sh',
  '.github/workflows/preflight.yml','.github/workflows/android.yml',
 ]
 

@@ -7,12 +7,14 @@ Estado del candidato 0.2.0 al 3 de noviembre de 2026. **No hay una APK nueva de 
 | Nivel | Resultado real |
 |---|---|
 | A — análisis de código | Auditados todos los archivos del repositorio original, escena generada, shaders, reproducción, controles, scripts UBA/Actions y documentación. Descargada la base oficial exacta y los fuentes oficiales de XRI 2.5.1, Hands 1.3.0, OpenXR 1.8.2, Meta OpenXR 0.2.1 y XR Management 4.4.0. Las APIs usadas se comprobaron allí |
-| B — pruebas automatizadas disponibles | 13 pruebas de regresión Python aprobadas. Contratos de fuente y proyecto ensamblado aprobados. Sintaxis de 12 archivos C#/Java analizada. Shell válido. MP4 completo y audio decodificados sin error por ffmpeg. Script UBA ejecutado desde Base, con clon/LFS del upstream y comprobación de versiones, features y rutas |
+| B — pruebas automatizadas disponibles | 24 pruebas de regresión Python aprobadas. Contratos de fuente y proyecto ensamblado aprobados. Sintaxis de 12 archivos C#/Java analizada. Shell válido. MP4 completo y audio decodificados sin error por ffmpeg. Script UBA ejecutado desde Base, con clon/LFS del upstream y comprobación de versiones, features y rutas |
 | B — pruebas dentro del editor | **Pendientes.** `SpatialBuild.Validate` prepara la escena, comprueba componentes y shaders e invoca acciones de UI. Estas pruebas están escritas, pero no se ejecutaron sin Unity |
-| C — compilación Android | **Pendiente para 0.2.0.** Sin artefacto APK. No se ejecutó C# en Unity ni se compilaron shaders GLES/Java/IL2CPP en este entorno |
+| C — compilación Android | **Sin APK.** El build #8 cargó y ejecutó el código C# con Unity 2022.3.62f3, pero la comprobación del editor original abortó antes de exportar. La corrección posterior y shaders GLES/Java/IL2CPP requieren el build #9 manual |
 | D — Meta Quest 3 real | **Pendiente para todas las funciones de 0.2.0.** No se declara resuelto el rosa, funcionando el hand tracking o validado el passthrough hasta esta prueba |
 
 El análisis de sintaxis detecta errores gramaticales de código; no comprueba tipos, referencias de ensamblados, APIs ni comportamiento. Los tests de configuración rechazan regresiones como media ausente/en ruta incorrecta, una variante sin estéreo, un shader para otro pipeline, features de mano deshabilitadas, ausencia del rig e incompatibilidad de la versión XRI.
+
+La corrección del bloqueo de versión y la distinción entre paquetes del upstream y los resueltos en Cloud están en el [análisis del build #8](BUILD8_COMPATIBILITY.md). La política admite expresamente el editor original y el del target; no acepta cualquier versión de Unity.
 
 ## Datos del demo verificados
 
@@ -21,7 +23,7 @@ El análisis de sintaxis detecta errores gramaticales de código; no comprueba t
 ## Puerta de validación de Unity
 
 1. Ensamblar Base con `tools/prepare-project.sh` en un checkout limpio, o usar el hook UBA existente.
-2. Abrir con Unity **2022.3.8f1** y módulos Android, resolver los paquetes fijados y dejar terminar la compilación C#.
+2. Abrir con Unity **2022.3.62f3** y módulos Android, resolver los paquetes fijados y dejar terminar la compilación C#.
 3. Ejecutar `SpatialBuild.Validate` con target Android. Debe terminar sin excepción y producir el marcador `SPATIAL_VALIDATION_PASS`.
 4. Revisar el log, especialmente errores de shader, paquetes, scripts o referencias. Si falla, corregir y repetir la validación antes de exportar una APK.
 5. Solo después ejecutar `SpatialBuild.Build`, que repite las invariantes antes de la exportación Android.
@@ -51,7 +53,7 @@ En el target existente que produjo el build #7, reutilizar la configuración y l
 | Unity project subfolder | `Base` |
 | Script prebuild | `../tools/prepare-project-uba.sh`, conservando la ruta aceptada por el target actual |
 | Método Unity pre-export | `SpatialBuild.PrepareScene` |
-| Editor | `2022.3.8f1` |
+| Editor existente | `2022.3.62f3` — sin cambiar Cloud |
 | Plataforma | Android, ARM64/IL2CPP, APK |
 | Escena | `Assets/SpatialHDMI/Scenes/SpatialHDMI_Main.unity` |
 | Package / version | `com.spatialhdmi.demo`, 0.2.0, versionCode 8 |
