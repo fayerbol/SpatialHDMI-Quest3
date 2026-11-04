@@ -149,6 +149,7 @@ public static class SpatialBuild {
             Require(ui.Controls.Count>=35,"Incomplete control panel");
             foreach(var selectable in ui.Controls.Values)Require(selectable!=null,"Missing UI control");
             var oldScale=placement.screen.transform.localScale;float oldCurve=placement.screen.curvature;
+            float oldGlow=ui.environment.intensity,oldDim=ui.environment.dimming;
             ((Slider)ui.Controls["Width"]).value=3;Require(Mathf.Abs(placement.screen.Width-3)<.001f,"Width slider is not connected");
             ((Slider)ui.Controls["Curvature"]).value=.6f;Require(Mathf.Abs(placement.screen.curvature-.6f)<.001f,"Curvature slider is not connected");
             ((Slider)ui.Controls["Glow"]).value=.5f;Require(Mathf.Abs(ui.environment.intensity-.5f)<.001f,"Glow slider is not connected");
@@ -157,6 +158,7 @@ public static class SpatialBuild {
             ((Button)ui.Controls["Lock"]).onClick.Invoke();Require(!placement.Locked && placement.grab.enabled,"Unlock failed");
             var position=placement.screen.transform.position;((Button)ui.Controls["MoveUp"]).onClick.Invoke();Require(Vector3.Distance(position,placement.screen.transform.position)>.09f,"Position button is not connected");
             placement.screen.transform.position=position;placement.screen.transform.localScale=oldScale;placement.SetCurvature(oldCurve);
+            ui.environment.intensity=oldGlow;ui.environment.dimming=oldDim;
             var mesh=placement.screen.GetComponent<MeshFilter>().sharedMesh;Require(mesh && mesh.vertexCount==(placement.screen.segments+1)*2,"Screen mesh not generated");
             Require(placement.screen.GetComponentInChildren<TrackedDeviceGraphicRaycaster>(true),"Spatial UI raycaster missing");
             placement.SetCurvature(0);var a=placement.screen.Point(0,-.5f);var b=placement.screen.Point(1,.5f);
