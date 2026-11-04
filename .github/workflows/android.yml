@@ -22,7 +22,9 @@ jobs:
             exit 1
           fi
       - name: Validate package before downloading
-        run: python3 tools/validate.py
+        run: |
+          python3 tools/validate.py
+          python3 -m unittest discover -s tests -v
       - name: Assemble upstream project
         run: bash tools/prepare-project.sh 2>&1 | tee prepare.log
       - name: Build Android APK

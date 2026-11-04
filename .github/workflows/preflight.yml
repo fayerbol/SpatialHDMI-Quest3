@@ -2,9 +2,14 @@ name: Spatial HDMI preflight (no Unity license)
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: spatial-preflight-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -13,23 +18,29 @@ jobs:
       - uses: actions/checkout@v4
         with:
           lfs: true
-      - name: Validate Spatial HDMI source package
-        run: python3 tools/validate.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install source parsers
+        run: python -m pip install -r tools/requirements-syntax.txt
+      - name: Validate source contracts and C#/Java syntax
+        run: |
+          python tools/validate.py
+          python tools/check_syntax.py
+          python -m unittest discover -s tests -v
+          bash -n tools/prepare-project.sh tools/prepare-project-uba.sh
       - name: Install video inspection tool
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - name: Validate demo video
+      - name: Decode entire bundled video and audio
         run: |
-          test -s Overlay/Assets/SpatialHDMI/StreamingAssets/demo.mp4
-          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 Overlay/Assets/SpatialHDMI/StreamingAssets/demo.mp4
+          ffprobe -v error -show_entries stream=codec_name,codec_type,width,height -show_entries format=duration -of json Overlay/Assets/StreamingAssets/demo.mp4
+          ffmpeg -v error -xerror -i Overlay/Assets/StreamingAssets/demo.mp4 -f null -
       - name: Assemble official Unity XR base using UBA hook context
         run: |
           mkdir -p Base
           cd Base
           bash ../tools/prepare-project-uba.sh
-      - name: Verify build method and generated Unity project
+      - name: Check real assembled dependency and XR configuration
         run: |
-          test -s Base/ProjectSettings/ProjectVersion.txt
-          test -s Base/Packages/manifest.json
-          test -s Base/Assets/Editor/SpatialBuild.cs
-          test -s Base/Assets/SpatialHDMI/StreamingAssets/demo.mp4
-          grep -q 'SpatialBuild.Build' .github/workflows/android.yml
+          python tools/check_project.py Base
+          python -m unittest discover -s tests -p test_project_contract.py -v

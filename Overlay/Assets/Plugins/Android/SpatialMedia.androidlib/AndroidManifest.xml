@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.spatialhdmi.bridge">
+  <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+  <application>
+    <activity android:name="com.spatialhdmi.bridge.MediaPickerActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+  </application>
+</manifest>

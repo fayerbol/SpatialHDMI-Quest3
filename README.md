@@ -1,45 +1,69 @@
-# Spatial HDMI — Meta Quest 3 (experimental)
+# Spatial HDMI — Meta Quest 3
 
-An experimental Unity XR Android application for Meta Quest 3. The current prototype renders a curved, movable virtual screen and plays a bundled demo video. **It does not yet capture an HDMI/UVC input**, and an APK has **not yet been successfully built or tested on Quest 3**.
+Spatial video player for mixed reality, with a bundled MP4, a movable 16:9 flat/curved screen, hand/controller interaction and a spatial control panel.
 
-## Source layout
+**Version 0.2.0 is a source repair candidate, not a device-validated release.** The previous build #7 was installed by the owner, who reported a pink screen, failed video playback and no hand interaction. This branch replaces that incomplete implementation. No new APK has been produced for these changes yet.
 
-- `Overlay/Assets/SpatialHDMI/Scripts/`: procedural screen, controller input, demo video, status HUD and head tracking.
-- `Overlay/Assets/SpatialHDMI/Resources/Screen.shader`: stereo-aware video screen shader.
-- `Overlay/Assets/SpatialHDMI/StreamingAssets/demo.mp4`: packaged test video.
-- `Overlay/Assets/Editor/SpatialBuild.cs`: editor scene generator and Android build entry point (`SpatialBuild.Build`).
-- `tools/validate.py`: static source checks (not a C# compile).
-- `tools/prepare-project.sh`: assembles the overlay over a pinned official Unity XR sample.
-- `.github/workflows/preflight.yml`: source/video/upstream preparation checks, without a Unity license.
-- `.github/workflows/android.yml`: manually triggered Android APK build, currently blocked on CI licensing.
+## What changed
 
-## Current functionality (unverified on device)
+- Corrected the packaged video location to **`Assets/StreamingAssets/demo.mp4`**. A nested `Assets/SpatialHDMI/StreamingAssets` directory is not Unity's application StreamingAssets directory.
+- Replaced legacy rendering with explicit URP/stereo shaders; added shader error checks before export.
+- Reused the **official Unity XRI Hands Interaction Demo rig** already included in the pinned base: both hands, ray pinch, poke, direct grab, hand visuals and Touch controllers.
+- Added four explicit grab handles, one/two-hand movement and rotation, two-hand scaling, locking, tracking-loss release and a release-pinch latch on recovery.
+- Added world-space playback, screen, atmosphere and sources panels, plus a small quick-access/recenter panel.
+- Added prepare/first-frame timeouts, play/pause, seek, volume, aspect-preserving display, an orientation switch and a local Android document picker.
+- Added smoothed virtual ambient glow sampled from the video, compositor-alpha darkening, preferences and a local device diagnostics snapshot.
+- Added source/configuration regression checks and Unity editor scene/UI invariants. Those editor checks have **not** been run in this environment.
 
-- Curved 16:9 screen, adjustable width, curvature, position and yaw.
-- Saved screen placement via Unity PlayerPrefs.
-- Bundled MP4 demo playback through Unity VideoPlayer.
-- Controller mappings: left stick moves screen vertically/laterally; left grip + stick changes size/curve; right stick moves screen depth; right grip + stick rotates; A toggles playback; B recenters; X toggles the HUD.
+## Evidence and documentation
 
-## License-free checks
+| Document | Contents |
+|---|---|
+| [Build #8 compatibility](docs/BUILD8_COMPATIBILITY.md) | Editor policy fix, resolved package audit and remaining export validation |
+| [Diagnosis](docs/DIAGNOSTICO.md) | Findings from the previous source, certainty and remaining pink-screen diagnosis |
+| [Research](docs/INVESTIGACION.md) | Accessible references, inspected SDK versions and limits of video inspection |
+| [Architecture](docs/ARQUITECTURA.md) | Responsibilities, interaction and rendering choices |
+| [Validation and installation](docs/VALIDACION.md) | Actual checks, Unity/UBA procedure and Quest acceptance checklist |
+| [USB HDMI plan](docs/HDMI_USB.md) | UVC/UAC, native/JNI boundary, permissions, bandwidth, latency and hardware gates |
 
-GitHub Actions → **Spatial HDMI preflight (no Unity license)** runs on pushes to `main` and can be started manually. It validates required files, checks the video with ffprobe, assembles the pinned Unity base and verifies generated paths. Passing this workflow does **not** prove Unity C# compilation or XR functionality.
+## Pinned base
 
-For local static checks: `python3 tools/validate.py`. For assembly on a system with git-lfs: `bash tools/prepare-project.sh`. The assembly script refuses to overwrite an existing `Base/` directory.
+[Unity-Technologies/mr-example-meta-openxr](https://github.com/Unity-Technologies/mr-example-meta-openxr) tag `v1.0.0-pre.1`, commit `1130bc5ff206eeef7c0e7d6c5617afb2b36dab4b`.
 
-## Android build
+The upstream was authored with Unity **2022.3.8f1**. Generated project metadata now targets the existing cloud editor **2022.3.62f3** (`96770f904ca7`). Both exact releases are explicitly accepted by the shared editor policy; other versions are rejected. No Unity Cloud setting is changed.
 
-The **Spatial HDMI Android** workflow is manual only. It uses GameCI Unity Builder v4 and expects three repository Actions secrets: `UNITY_LICENSE`, `UNITY_EMAIL`, `UNITY_PASSWORD`. Do **not** paste credentials or license content into issues, commits, chat, or workflow logs. The existing Unity Personal activation in Unity Hub on a separate Windows machine does not by itself provide a CI license file. Only use Unity's officially supported licensing procedures; do not fabricate or repurpose a license file.
+Source manifest pins: URP **14.0.8**, OpenXR **1.8.2**, Unity OpenXR Meta **0.2.1**, XR Hands **1.3.0**, XRI **2.5.1**, AR Foundation **5.1.0-pre.10**, Input System **1.7.0**. Build #8 resolved newer compatible packages inside Unity; the source pins are not a claim about the resolved cloud versions. See [build #8 compatibility audit](docs/BUILD8_COMPATIBILITY.md). The Meta XR Core/Interaction SDK packages are **not installed**; the existing compatible Unity integration is used instead of importing a current SDK that targets a different editor.
 
-Once a supported CI license is available, configure the secrets under **Settings → Secrets and variables → Actions**, run **Spatial HDMI Android** from Actions, and download the `SpatialHDMI-APK` artifact on success. Until then, the workflow deliberately fails early with a licensing message. No paid service is required by this repository, but GitHub-hosted runner quotas and Unity licensing terms still apply.
+## Reproduce available checks
 
-## Known limitations
+```bash
+python3 tools/validate.py
+python3 -m pip install -r tools/requirements-syntax.txt
+python3 tools/check_syntax.py
+python3 -m unittest discover -s tests -v
+bash tools/prepare-project.sh
+python3 tools/check_project.py Base
+python3 -m unittest discover -s tests -p test_project_contract.py -v
+ffmpeg -v error -xerror -i Overlay/Assets/StreamingAssets/demo.mp4 -f null -
+```
 
-1. **No confirmed APK or Quest test yet.** Android compilation and passthrough behavior remain unverified.
-2. The project currently plays a demo file; USB capture/UVC, USB-C PD passthrough, and HDMI Link integration are **not implemented**.
-3. Passthrough/OpenXR feature configuration is inherited from the upstream project and must be confirmed in an actual Unity build and on the device.
-4. Real-time room mesh/geometry and ambient lighting are **not implemented**.
-5. Input mappings depend on the XR controller runtime and need hardware validation.
+Assembly refuses to overwrite an existing `Base/`. UBA uses the separate idempotent `tools/prepare-project-uba.sh` hook. Neither Python validation nor syntax parsing compiles Unity C#, Java or shaders.
 
-## Upstream
+With the pinned Unity editor and Android modules:
 
-`tools/prepare-project.sh` uses [Unity-Technologies/mr-example-meta-openxr](https://github.com/Unity-Technologies/mr-example-meta-openxr) at tag `v1.0.0-pre.1`, with a revision guard. See the script for exact pin and package checks.
+```bash
+/path/to/Unity -batchmode -nographics -quit -projectPath "$PWD/Base" -buildTarget Android -executeMethod SpatialBuild.Validate -logFile "$PWD/unity-validate.log"
+/path/to/Unity -batchmode -nographics -quit -projectPath "$PWD/Base" -buildTarget Android -executeMethod SpatialBuild.Build -logFile "$PWD/unity-build.log"
+```
+
+Run the second command only after validation succeeds. `SpatialBuild.Build` repeats the editor invariants before building. Output: `Base/build/Android/SpatialHDMI.apk`.
+
+The existing GameCI workflow remains manual and requires its existing supported Unity licensing configuration. No credentials, license files or paid services were added or changed. The existing Unity Build Automation target can reuse its hook and `SpatialBuild.PrepareScene` pre-export method; see the validation document.
+
+## Limitations
+
+- No new Android compilation or real Quest validation for 0.2.0 yet. A successful preflight is not proof of a functional app.
+- The exact runtime cause of build #7's pink image still needs its Unity/Android shader logs; source risks were removed, not declared proven on hardware.
+- USB HDMI capture, UAC audio, negotiated 1080p60/4K60 and spatial anchors are **not implemented**.
+- Ambient light is virtual color glow around the display. It does not relight physical surfaces or reconstruct a room mesh.
+- Android document-picker availability, decoder compatibility, hand comfort, passthrough alpha and frame timing must be checked on Quest. No DRM-service compatibility is claimed.
